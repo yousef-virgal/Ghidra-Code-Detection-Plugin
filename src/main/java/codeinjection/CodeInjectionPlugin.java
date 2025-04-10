@@ -42,8 +42,8 @@ import resources.Icons;
 	status = PluginStatus.STABLE,
 	packageName = ExamplesPluginPackage.NAME,
 	category = PluginCategoryNames.EXAMPLES,
-	shortDescription = "Plugin short description goes here.",
-	description = "Plugin long description goes here."
+	shortDescription = "This Plugin is used to detect possible injection attacks for x86 systems",
+	description = "This Plugin is used to detect possible injection attacks for x86 systems"
 )
 //@formatter:on
 public class CodeInjectionPlugin extends ProgramPlugin {

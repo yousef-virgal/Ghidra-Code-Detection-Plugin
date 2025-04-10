@@ -36,7 +36,8 @@ public class CodeInjectionAnalyzer extends AbstractAnalyzer {
 
 		// Name the analyzer and give it a description.
 
-		super("Code Injection Analyzer", " Code Analyzer description goes here", AnalyzerType.BYTE_ANALYZER);
+		super("Shell Code Injection Analyzer",
+				"This Plugin is used to detect possible injection attacks for x86 systems", AnalyzerType.BYTE_ANALYZER);
 	}
 
 	@Override
@@ -50,34 +51,41 @@ public class CodeInjectionAnalyzer extends AbstractAnalyzer {
 	@Override
 	public boolean canAnalyze(Program program) {
 
-		// Examine 'program' to determine of this analyzer should analyze it.  Return true
+		// Examine 'program' to determine of this analyzer should analyze it. Return
+		// true
 		// if it can.
 
 		return true;
 	}
 
 	@Override
-	public void registerOptions(Options options, Program program) {
-
-		// If this analyzer has custom options, register them here
-
-		options.registerOption("Option name goes here", false, null,
-			"Option description goes here");
-	}
-
-	@Override
 	public boolean added(Program program, AddressSetView set, TaskMonitor monitor, MessageLog log)
 			throws CancelledException {
-		
+
+		ShellCodeDetector shellcodeDetector = new ShellCodeDetector(program);
+		shellcodeDetector.analyze(monitor);
+
+		String outputString = "";
+		for (ShellCodeOutput result : shellcodeDetector.results) {
+			outputString += result.toString() + "\n";
+		}
+
+		if (!shellcodeDetector.results.isEmpty()) {
+			APIScanner scanner = new APIScanner(program);
+			scanner.scan(monitor);
+			
+			outputString += "=============== \n";
+			for (APIScannerResults result : scanner.results) {
+				outputString += result.toString() + "\n";
+			}
+		}
+
+		OutputStringWrapper output = new OutputStringWrapper(outputString);
+
 		javax.swing.SwingUtilities.invokeLater(() -> {
-            JOptionPane.showMessageDialog(null, 
-                "Analysis has begun!", 
-                "Analysis Started", 
-                JOptionPane.INFORMATION_MESSAGE);
-        });
-		
-		new APIScanner(program).scan(monitor);
-		new ShellCodeDetector(program).analyze(monitor);
+			JOptionPane.showMessageDialog(null, output.toString(), "Analysis Results", JOptionPane.INFORMATION_MESSAGE);
+		});
+
 		return true;
 	}
 }

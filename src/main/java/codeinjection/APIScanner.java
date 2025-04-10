@@ -7,12 +7,16 @@ import ghidra.program.model.listing.Program;
 import ghidra.util.Msg;
 import ghidra.util.task.TaskMonitor;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class APIScanner {
 	
 	 private final Program program;
-	    private static final String[] INJECTION_APIS = {
+	 
+	 public ArrayList<APIScannerResults> results = new ArrayList<APIScannerResults>();
+	 
+	 private static final String[] INJECTION_APIS = {
 	        "WriteProcessMemory", "NtWriteVirtualMemory",
 	        "CreateRemoteThread", "NtCreateThreadEx",
 	        "QueueUserAPC", "RtlCreateUserThread",
@@ -24,6 +28,7 @@ public class APIScanner {
 	    }
 
 	    public void scan(TaskMonitor monitor) {
+	    	
 	        FunctionManager functionManager = program.getFunctionManager();
 	        for (Function function : functionManager.getFunctions(true)) {
 	            if (monitor.isCancelled()) break;
@@ -34,13 +39,15 @@ public class APIScanner {
 	    private void checkFunctionForInjectionAPI(Function function) {
 	        String functionName = function.getName();
 	        if (Arrays.stream(INJECTION_APIS).anyMatch(functionName::contains)) {
-	            markAsSuspicious(function.getEntryPoint());
+	            markAsSuspicious(functionName, function.getEntryPoint());
 	        }
 	    }
 
-	    private void markAsSuspicious(Address address) {
+	    private void markAsSuspicious(String name, Address address) {
 	        // Implement your marking logic (e.g., set bookmark)
 	    	Msg.debug(this, "Address marked as Suspicious by API Scanner " + address.toString());
-	        program.getBookmarkManager().setBookmark(address, "Suspicious", "INJECTION_API", "AAA");
+	        program.getBookmarkManager().setBookmark(address, "Suspicious", "INJECTION_API", "");
+	        
+	        results.add(new APIScannerResults(name, address));
 	    }
 }
